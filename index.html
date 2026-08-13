@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center</title>
+    
+    <!-- Browser Tab Favicon -->
+    <link rel="icon" type="image/png" href="io-favicon.png">
+
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --card-hover: #e0f2fe;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --accent: #0284c7;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        header {
+            margin-bottom: 40px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .powered-by {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: var(--text-sub);
+        }
+
+        .powered-by img {
+            height: 28px;
+            width: auto;
+        }
+
+        .controls {
+            margin-top: 15px;
+        }
+
+        .btn-add {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-add:hover {
+            background-color: #0369a1;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+            margin: 40px 0 20px 0;
+        }
+
+        .section-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-edit-sec {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-edit-sec:hover {
+            color: var(--accent);
+            background: #e0f2fe;
+        }
+
+        .section-order-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-order {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-sub);
+            cursor: pointer;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .btn-order:hover {
+            background: var(--card-hover);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 18px;
+            min-height: 50px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .card:hover {
+            background-color: var(--card-hover);
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .card.dragging {
+            opacity: 0.4;
+            cursor: grabbing;
+            border: 2px dashed var(--accent);
+            transform: scale(0.98);
+        }
+
+        .card.drag-over {
+            border: 2px solid var(--accent);
+            background-color: #f0f9ff;
+        }
+
+        .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background-color: #f1f5f9;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .icon img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-grow: 1;
+            pointer-events: none;
+        }
+
+        .title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .category {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-actions {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            display: none;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 4px;
+            padding: 2px;
+            z-index: 2;
+        }
+
+        .card:hover .card-actions {
+            display: flex;
+        }
+
+        .btn-card-action {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 2px 4px;
+            line-height: 1;
+            border-radius: 3px;
+        }
+
+        .btn-card-action:hover.edit {
+            color: var(--accent);
+            background: #e0f2fe;
+        }
+
+        .btn-card-action:hover.delete {
+            color: var(--danger);
+            background: #fee2e2;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 100;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: white;
+            padding: 28px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            color: var(--text-main);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--accent);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .btn-cancel {
+            background: #e2e8f0;
+            color: var(--text-main);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Command Center</h1>
+        <div class="powered-by">
+            Powered by 
+            <img src="io-logo.png" alt="Infinite Office Logo" onerror="this.style.display='none';">
+        </div>
+        <div class="controls">
+            <button class="btn-add" onclick="openModal()">+ Add Link</button>
+        </div>
+    </header>
+
+    <div id="dashboard-sections"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h2 id="modalTitle">Add New Link</h2>
+        <form id="addLinkForm" onsubmit="handleFormSubmit(event)">
+            <input type="hidden" id="editSecIdx" value="-1">
+            <input type="hidden" id="editLinkIdx" value="-1">
+
+            <div class="form-group">
+                <label for="linkTitle">Label / Name</label>
+                <input type="text" id="linkTitle" placeholder="e.g. Google, Dashboard" required>
+            </div>
+
+            <div class="form-group">
+                <label for="linkSection">Section</label>
+                <select id="linkSection" onchange="toggleCustomSectionInput(this)" required></select>
+            </div>
+
+            <div class="form-group" id="customSectionGroup" style="display: none;">
+                <label for="customSectionName">New Section Name</label>
+                <input type="text" id="customSectionName" placeholder="e.g. Work, Tools">
+            </div>
+
+            <div class="form-group">
+                <label for="linkUrl">Web Address (URL)</label>
+                <input type="url" id="linkUrl" placeholder="https://example.com" required>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn-submit" id="submitBtn">Add Link</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Generic default template for GitHub code privacy
+    const defaultData = [
+        {
+            section: "General Links",
+            links: [
+                { title: "Google", url: "https://www.google.com" }
+            ]
+        }
+    ];
+
+    let appData = [];
+    let draggedItem = null;
+
+    function loadData() {
+        const saved = localStorage.getItem('commandCenterData');
+        if (saved) {
+            appData = JSON.parse(saved);
+        } else {
+            appData = defaultData;
+            saveData();
+        }
+        renderDashboard();
+    }
+
+    function saveData() {
+        localStorage.setItem('commandCenterData', JSON.stringify(appData));
+    }
+
+    function getRootDomain(urlStr) {
+        try {
+            const parsed = new URL(urlStr);
+            const parts = parsed.hostname.split('.');
+            if (parts.length > 2) {
+                return parts.slice(-2).join('.');
+            }
+            return parsed.hostname;
+        } catch(e) {
+            return '';
+        }
+    }
+
+    function loadFavicon(linkObj, imgElement) {
+        if (linkObj.cachedIcon) {
+            imgElement.src = linkObj.cachedIcon;
+            return;
+        }
+
+        const domain = getRootDomain(linkObj.url);
+        if (!domain) return;
+
+        const providers = [
+            `https://www.google.com/s2/favicons?sz=64&domain=${domain}`,
+            `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+            `https://icon.horse/icon/${domain}`
+        ];
+
+        let providerIdx = 0;
+
+        function tryNextProvider() {
+            if (providerIdx >= providers.length) {
+                imgElement.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='2' y1='12' x2='22' y2='12'/></svg>";
+                return;
+            }
+
+            const tempImg = new Image();
+            tempImg.crossOrigin = "Anonymous";
+            tempImg.src = providers[providerIdx];
+
+            tempImg.onload = function() {
+                imgElement.src = tempImg.src;
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = tempImg.naturalWidth || 32;
+                    canvas.height = tempImg.naturalHeight || 32;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(tempImg, 0, 0);
+                    const base64 = canvas.toDataURL('image/png');
+                    linkObj.cachedIcon = base64;
+                    saveData();
+                } catch(e) {
+                    linkObj.cachedIcon = tempImg.src;
+                    saveData();
+                }
+            };
+
+            tempImg.onerror = function() {
+                providerIdx++;
+                tryNextProvider();
+            };
+        }
+
+        tryNextProvider();
+    }
+
+    function renderDashboard() {
+        const container = document.getElementById('dashboard-sections');
+        container.innerHTML = '';
+
+        appData.forEach((sec, secIdx) => {
+            const secHeader = document.createElement('div');
+            secHeader.className = 'section-header';
+            
+            const titleWrapper = document.createElement('div');
+            titleWrapper.className = 'section-title-wrapper';
+
+            const secTitle = document.createElement('div');
+            secTitle.className = 'section-title';
+            secTitle.innerText = sec.section;
+
+            const editSecBtn = document.createElement('button');
+            editSecBtn.className = 'btn-edit-sec';
+            editSecBtn.title = 'Edit Section Title';
+            editSecBtn.innerHTML = '✎';
+            editSecBtn.onclick = () => editSectionTitle(secIdx);
+
+            titleWrapper.appendChild(secTitle);
+            titleWrapper.appendChild(editSecBtn);
+
+            const orderBtns = document.createElement('div');
+            orderBtns.className = 'section-order-btns';
+            orderBtns.innerHTML = `
+                <button class="btn-order" title="Move Up" onclick="moveSection(${secIdx}, -1)">▲</button>
+                <button class="btn-order" title="Move Down" onclick="moveSection(${secIdx}, 1)">▼</button>
+            `;
+
+            secHeader.appendChild(titleWrapper);
+            secHeader.appendChild(orderBtns);
+
+            const grid = document.createElement('div');
+            grid.className = 'grid';
+            grid.dataset.secIdx = secIdx;
+
+            sec.links.forEach((link, linkIdx) => {
+                const domain = getRootDomain(link.url);
+
+                const card = document.createElement('a');
+                card.href = link.url;
+                card.target = '_blank';
+                card.className = 'card';
+                card.draggable = true;
+                card.dataset.secIdx = secIdx;
+                card.dataset.linkIdx = linkIdx;
+
+                card.innerHTML = `
+                    <div class="card-actions">
+                        <button class="btn-card-action edit" title="Edit Link" onclick="editLink(event, ${secIdx}, ${linkIdx})">✎</button>
+                        <button class="btn-card-action delete" title="Delete Link" onclick="deleteLink(event, ${secIdx}, ${linkIdx})">&times;</button>
+                    </div>
+                    <div class="icon">
+                        <img id="fav-${secIdx}-${linkIdx}" alt="">
+                    </div>
+                    <div class="info">
+                        <span class="title">${link.title}</span>
+                        <span class="category">${domain}</span>
+                    </div>
+                `;
+
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('dragenter', handleDragEnter);
+                card.addEventListener('dragleave', handleDragLeave);
+                card.addEventListener('drop', handleDrop);
+
+                grid.appendChild(card);
+
+                setTimeout(() => {
+                    const imgEl = document.getElementById(`fav-${secIdx}-${linkIdx}`);
+                    if (imgEl) loadFavicon(link, imgEl);
+                }, 0);
+            });
+
+            container.appendChild(secHeader);
+            container.appendChild(grid);
+        });
+    }
+
+    function handleDragStart(e) {
+        draggedItem = {
+            secIdx: parseInt(this.dataset.secIdx),
+            linkIdx: parseInt(this.dataset.linkIdx)
+        };
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+        draggedItem = null;
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function handleDragEnter(e) {
+        if (this !== e.target) return;
+        this.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        this.classList.remove('drag-over');
+
+        if (!draggedItem) return;
+
+        const targetSecIdx = parseInt(this.dataset.secIdx);
+        const targetLinkIdx = parseInt(this.dataset.linkIdx);
+
+        if (draggedItem.secIdx === targetSecIdx && draggedItem.linkIdx !== targetLinkIdx) {
+            const links = appData[targetSecIdx].links;
+            const [movedLink] = links.splice(draggedItem.linkIdx, 1);
+            links.splice(targetLinkIdx, 0, movedLink);
+
+            saveData();
+            renderDashboard();
+        }
+    }
+
+    function editSectionTitle(secIdx) {
+        const currentTitle = appData[secIdx].section;
+        const newTitle = prompt("Enter new section title:", currentTitle);
+        
+        if (newTitle && newTitle.trim() !== "" && newTitle.trim() !== currentTitle) {
+            appData[secIdx].section = newTitle.trim();
+            saveData();
+            renderDashboard();
+        }
+    }
+
+    function moveSection(index, direction) {
+        const targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= appData.length) return;
+
+        const temp = appData[index];
+        appData[index] = appData[targetIndex];
+        appData[targetIndex] = temp;
+
+        saveData();
+        renderDashboard();
+    }
+
+    function openModal(isEdit = false) {
+        const select = document.getElementById('linkSection');
+        select.innerHTML = '';
+
+        appData.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.section;
+            opt.innerText = s.section;
+            select.appendChild(opt);
+        });
+
+        const newOpt = document.createElement('option');
+        newOpt.value = "__NEW__";
+        newOpt.innerText = "+ Add New Section...";
+        select.appendChild(newOpt);
+
+        document.getElementById('customSectionGroup').style.display = 'none';
+        
+        if (!isEdit) {
+            document.getElementById('addLinkForm').reset();
+            document.getElementById('editSecIdx').value = "-1";
+            document.getElementById('editLinkIdx').value = "-1";
+            document.getElementById('modalTitle').innerText = "Add New Link";
+            document.getElementById('submitBtn').innerText = "Add Link";
+        }
+
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function toggleCustomSectionInput(selectElem) {
+        const customGroup = document.getElementById('customSectionGroup');
+        const customInput = document.getElementById('customSectionName');
+        if (selectElem.value === '__NEW__') {
+            customGroup.style.display = 'flex';
+            customInput.required = true;
+        } else {
+            customGroup.style.display = 'none';
+            customInput.required = false;
+        }
+    }
+
+    function editLink(event, secIdx, linkIdx) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const linkObj = appData[secIdx].links[linkIdx];
+
+        openModal(true);
+
+        document.getElementById('modalTitle').innerText = "Edit Link";
+        document.getElementById('submitBtn').innerText = "Save Changes";
+        document.getElementById('editSecIdx').value = secIdx;
+        document.getElementById('editLinkIdx').value = linkIdx;
+
+        document.getElementById('linkTitle').value = linkObj.title;
+        document.getElementById('linkUrl').value = linkObj.url;
+        document.getElementById('linkSection').value = appData[secIdx].section;
+    }
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        const title = document.getElementById('linkTitle').value.trim();
+        let sectionName = document.getElementById('linkSection').value;
+        const url = document.getElementById('linkUrl').value.trim();
+
+        const editSecIdx = parseInt(document.getElementById('editSecIdx').value);
+        const editLinkIdx = parseInt(document.getElementById('editLinkIdx').value);
+
+        if (sectionName === '__NEW__') {
+            sectionName = document.getElementById('customSectionName').value.trim();
+        }
+
+        if (editSecIdx > -1 && editLinkIdx > -1) {
+            appData[editSecIdx].links.splice(editLinkIdx, 1);
+        }
+
+        let targetSec = appData.find(s => s.section.toLowerCase() === sectionName.toLowerCase());
+        if (!targetSec) {
+            targetSec = { section: sectionName, links: [] };
+            appData.push(targetSec);
+        }
+
+        targetSec.links.push({ title: title, url: url });
+
+        saveData();
+        renderDashboard();
+        closeModal();
+    }
+
+    function deleteLink(event, secIdx, linkIdx) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (confirm("Remove this link?")) {
+            appData[secIdx].links.splice(linkIdx, 1);
+            saveData();
+            renderDashboard();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadData);
+</script>
+
+</body>
+</html>
